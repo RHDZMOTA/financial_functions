@@ -15,9 +15,11 @@ def toDate(datetime_obj):
 
 # future_value
 futureValue = lambda capital, interest, periods: capital * (1 + interest) ** periods
+contFutureValue = lambda capital, interest, years: capital * np.exp(interest * years)
 
 # present_value 
 presetValue = lambda capital, interest, periods: capital * (1 + interest) ** (-periods)
+contPresentValue = lambda capital, interest, years: capital * np.exp(-interest * years)
 
 # annual interest rate
 annualInterest = lambda initial_capital, end_capital, years: (end_capital / initial_capital) ** (1 / years) - 1
