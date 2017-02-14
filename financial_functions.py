@@ -55,6 +55,7 @@ new_cap:
 '''
 equivalentRate = lambda rate, cap, new_cap: new_cap * ((1 + rate / cap) ** (cap / new_cap) - 1)
 
+realRate = lambda rate, inflation: (1+rate)/(1+inflation) - 1
 # %% Risk Free Interest Rate (CETES)
 
 def getRiskFreeRate():
@@ -455,10 +456,70 @@ class debt:
     
         
 
-# %% 
+# %% BONDS 
+
+class Bonds(object):
+    desc = 'Generic Bonds'
+    rate_options  = {360:'daily', 12:'1m', 6:'2m', 4:'3m', 3:'4m', 2:'6m', 1:'1y'}
+    cap_options   = {'daily':360, '1m':12, '2m':6, '3m':4, '4m':3, '6m':2, '1y':1}
+    #cetes         = getRiskFreeRate()
+    
+    def __init__(self,nominal_value=100,coupons={'delta_periods':182,'interest_rate':0.082},
+                 market_rate=0.085,time2maturity=100):
+        
+        self.nominal_value = nominal_value
+        
+        # Coupon related info
+        self.coupons = coupons
+        self.coupons['value'] = nominal_value*coupons['delta_periods']*coupons['interest_rate'] / 360
+        self.coupons['pending_coupons'] = time2maturity / coupons['delta_periods']
+        self.coupons['integer_coupons'] = int(self.coupons['pending_coupons'])
+        self.coupons['float_coupons']   = self.coupons['pending_coupons'] - self.coupons['integer_coupons']
+    
+        # interest rate
+        self.market_rate = market_rate
+        
+        # passed days
+        self.passed_units  = self.coupons['delta_periods']*(1-self.coupons['float_coupons'])
+        self.pending_units = self.coupons['float_coupons']*self.coupons['delta_periods']
+        
+        self.market_rate = market_rate
+
+    def dirtyPrice(self):
+        present_value_list = []
+        for i in range(self.coupons['integer_coupons']):
+            j = i + 1
+            present_value_list.append(presetValue(self.coupons['value'] if j != self.coupons['integer_coupons'] else self.coupons['value']+self.nominal_value,
+                                         self.coupons['delta_periods']*self.market_rate/360,j))
+        self.lsp = present_value_list
+        present_value = sum(present_value_list)
+        if self.coupons['float_coupons'] == False:
+            return present_value
+        return present_value+self.coupons['value']
+    
+    def cleanPrice(self):
+        
+        self.dirty_price = self.dirtyPrice()
+        if self.coupons['float_coupons'] == False:
+            return self.dirty_price
+        value_at_passed = self.dirty_price / (1+self.coupons['delta_periods']*self.market_rate/360)**(self.pending_units/self.coupons['delta_periods'])
+        self.delayed_interest = self.nominal_value*self.coupons['interest_rate']*self.passed_units/360
+        self.clean_price = value_at_passed - self.delayed_interest
+        return self.clean_price
+        
+    def getDuration(self):
+        duration, c = 0, 1
+        for i in self.lsp:
+            duration += c*self.coupons['delta_periods']*i/360
+            c += 1
+        return duration
 
 # %% 
 
-# %% 
+# %%
 
-# %% 
+# %%
+
+# %%
+
+# %%
