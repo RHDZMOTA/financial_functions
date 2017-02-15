@@ -512,10 +512,10 @@ class Bonds(object):
         for i in self.lsp:
             duration += c*self.coupons['delta_periods']*i/360
             c += 1
-        self.duration = duration / self.clean_price()
+        self.duration = duration / self.cleanPrice()
         return self.duration
         
-    def sensibility(self):
+    def getSensibility(self):
         return self.getDuration() / (1+self.market_rate)
 
 # %% 
